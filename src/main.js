@@ -52,27 +52,34 @@ app.get('/callback', (req, res, next) => {
 
   request.post(authOptions, (err, resp, body) => {
     if (err) throw err
-    console.log(2)
 
     const accessToken = body.access_token
-    // job.schedule('0 20 * * 0', () => {
-      main(accessToken)
-    // })
+    const options = {
+      url: `https://api.spotify.com/v1/users/${USER}/playlists/${PLAYLIST}/tracks`,
+      headers: { 'Authorization': 'Bearer ' + accessToken },
+      json: true
+    }
+
+    request.get(options, function(err, res, body) {
+      const songs = body.items.map(element => element.track)
+      let playedSongs = []
+      // job.schedule('0 20 * * 0', () => {
+        while (true) {
+          const song = songs[Math.floor(Math.random() * songs.length)]
+          if (!playedSongs.includes(song.name) && !song.explicit) {
+            main(song)
+            break
+          }
+        }
+      // })
+    })
   })
 
   res.sendFile('callback.html', { root: WWW })
 })
 
-function main(accessToken) {
-  var options = {
-    url: `https://api.spotify.com/v1/users/${USER}/playlists/${PLAYLIST}/tracks`,
-    headers: { 'Authorization': 'Bearer ' + accessToken },
-    json: true
-  }
-
-  request.get(options, function(err, res, body) {
-    console.log(body);
-  })
+function main(song) {
+  console.log(song.name)
 }
 
 
