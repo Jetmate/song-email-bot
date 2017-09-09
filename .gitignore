@@ -61,4 +61,4 @@ typings/
 build/
 
 # client secrets
-client_secret.json
+client_info.json
