@@ -18,7 +18,8 @@
   "homepage": "https://github.com/Jetmate/song-email-bot#readme",
   "dependencies": {
     "express": "^4.15.3",
-    "spotify-web-api-js": "^0.22.1"
+    "node-schedule": "^1.2.4",
+    "request": "^2.81.0"
   },
   "devDependencies": {
     "babel-core": "^6.25.0",
