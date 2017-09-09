@@ -33,7 +33,6 @@ const redirectUri = 'http://0.0.0.0:4000/callback'
 const app = express()
 app.set('views', WWW)
 const server = app.listen(4000, '0.0.0.0')
-let job = new nodeSchedule.Job()
 
 app.get('/', (req, res) => {
   let scope = 'playlist-read-private';
@@ -78,10 +77,10 @@ app.get('/callback', (req, res, next) => {
 
       const songs = body.items.map(element => element.track)
       let playedSongs = []
-      // job.schedule('0 20 * * 0', () => {
+      nodeSchedule.scheduleJob('0 20 * * 0', () => {
         findSong(songs, playedSongs)
-
-      // })
+        count++
+      })
     })
   })
 
@@ -95,7 +94,6 @@ function findSong (songs, playedSongs) {
       if (lyrics) {
         playedSongs.push(song.name)
         send(song, lyrics)
-        console.log(1)
       } else {
         findSong(song, playedSongs)
       }
