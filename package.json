@@ -1,0 +1,31 @@
+{
+  "name": "song-email-bot",
+  "version": "1.0.0",
+  "description": "Emails a random song from a spotify playlist to a specified email",
+  "main": "build/main.js",
+  "scripts": {
+    "test": "gulp"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jetmate/song-email-bot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Jetmate/song-email-bot/issues"
+  },
+  "homepage": "https://github.com/Jetmate/song-email-bot#readme",
+  "dependencies": {
+    "express": "^4.15.3",
+    "spotify-web-api-js": "^0.22.1"
+  },
+  "devDependencies": {
+    "babel-core": "^6.25.0",
+    "babel-preset-env": "^1.6.0",
+    "babel-preset-stage-0": "^6.24.1",
+    "gulp": "^3.9.1",
+    "gulp-babel": "^7.0.0",
+    "gulp-nodemon": "^2.2.1"
+  }
+}
