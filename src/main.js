@@ -69,7 +69,6 @@ app.get('/callback', (req, res, next) => {
       headers: { 'Authorization': 'Bearer ' + accessToken },
       json: true
     }
-    console.log(SPOTIFY_USERNAME, PLAYLIST, accessToken)
 
     request.get(options, function(err, res, body) {
       if (err) throw err
@@ -80,6 +79,8 @@ app.get('/callback', (req, res, next) => {
         while (true) {
           const song = songs[Math.floor(Math.random() * songs.length)]
           if (!playedSongs.includes(song.name) && !song.explicit) {
+            playedSongs.push(song.name)
+            console.log(song.name, playedSongs)
             main(song)
             break
           }
@@ -92,7 +93,6 @@ app.get('/callback', (req, res, next) => {
 })
 
 function main(song) {
-  console.log(SPOTIFY_CLIENT_SECRET, SPOTIFY_CLIENT_ID, SPOTIFY_USERNAME, PLAYLIST, GMAIL_USERNAME, GMAIL_PASSWORD, EMAIL_RECIPIENT, EMAIL_SUBJECT, GMAIL_ACCESS_TOKENl, GMAIL_REFRESH_TOKEN, GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_ACCESS_TOKEN)
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -109,7 +109,11 @@ function main(song) {
     from: GMAIL_USERNAME,
     to: EMAIL_RECIPIENT,
     subject: EMAIL_SUBJECT,
-    text: `test`
+    text: `
+    Name:   ${song.name}
+    Song:   ${song.album.name}
+    Album:   ${song.artists[0].name}
+    `
   }
 
   transporter.sendMail(messageOptions, (err, info) => {
