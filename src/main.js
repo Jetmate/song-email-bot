@@ -28,7 +28,13 @@ fs.readFile(path.join(__dirname, '../client_info.json'), 'utf8', (err, data) => 
   EMAIL_RECIPIENT = results.emailRecipient
   EMAIL_SUBJECT = results.emailSubject
 })
-const redirectUri = 'http://0.0.0.0:4000/callback'
+
+let redirectUri
+if (process.env.NODE_ENV === 'production') {
+  redirectUri = 'http://104.131.40.228:4000/callback'
+} else {
+  redirectUri = 'http://0.0.0.0:4000/callback'
+}
 
 const app = express()
 app.set('views', WWW)
@@ -77,10 +83,20 @@ app.get('/callback', (req, res, next) => {
 
       const songs = body.items.map(element => element.track)
       let playedSongs = []
-      nodeSchedule.scheduleJob('0 20 * * 0', () => {
-        findSong(songs, playedSongs)
-        count++
-      })
+      if (process.env.NODE_ENV === 'production') {
+        nodeSchedule.scheduleJob('0 20 * * 0', () => {
+          findSong(songs, playedSongs)
+          count++
+        })
+      } else {
+        let count = 0
+        nodeSchedule.scheduleJob('* * * * *', () => {
+          if (count < 5) {
+            findSong(songs, playedSongs)
+            count++
+          }
+        })
+      }
     })
   })
 
