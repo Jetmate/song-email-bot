@@ -1,7 +1,7 @@
 module.exports = {
   apps: [{
-    name: 'factions.io',
-    script: 'main.js',
+    name: 'email bot',
+    script: 'build/main.js',
     watch: true,
     env: {'NODE_ENV': 'production'}
   }]
