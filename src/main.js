@@ -84,7 +84,7 @@ app.get('/callback', (req, res, next) => {
       const songs = body.items.map(element => element.track)
       let playedSongs = []
       if (process.env.NODE_ENV === 'production') {
-        nodeSchedule.scheduleJob('0 20 * * 0', () => {
+        nodeSchedule.scheduleJob('0 20 * * *', () => {
           findSong(songs, playedSongs)
           count++
         })
