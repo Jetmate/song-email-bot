@@ -36,6 +36,13 @@ if (process.env.NODE_ENV === 'production') {
   redirectUri = 'http://0.0.0.0:4000/callback'
 }
 
+let playedSongs = []
+fs.readFile(path.join(__dirname, '../read_songs.txt'), 'utf8', (err, data) => {
+  if (err) throw err
+  playedSongs.split('\n')
+})
+
+
 const app = express()
 app.set('views', WWW)
 const server = app.listen(4000, '0.0.0.0')
@@ -82,8 +89,7 @@ app.get('/callback', (req, res, next) => {
       if (err) throw err
 
       const songs = body.items.map(element => element.track)
-      let playedSongs = []
-      if (process.env.NODE_ENV === 'production') {
+      if (process.env.NODE_ENV !== 'production') {
         nodeSchedule.scheduleJob('0 20 * * *', () => {
           findSong(songs, playedSongs)
           count++
@@ -108,6 +114,7 @@ function findSong (songs, playedSongs) {
   if (!playedSongs.includes(song.name) && !song.explicit) {
     getLyrics(song, (lyrics) => {
       if (lyrics) {
+        fs.appendFile('../read_songs.txt', song.name + '\n')
         playedSongs.push(song.name)
         send(song, lyrics)
       } else {
