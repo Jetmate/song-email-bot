@@ -7,6 +7,18 @@ import request from 'request'
 import nodemailer from 'nodemailer'
 import cheerio from 'cheerio'
 
+nodeSchedule.scheduleJob('0 20 * * *', () => {
+  console.log('day')
+})
+
+nodeSchedule.scheduleJob('0 * * * *', () => {
+  console.log('hour')
+})
+
+nodeSchedule.scheduleJob('* * * * *', () => {
+  console.log('minute')
+})
+
 const WWW = path.join(__dirname, '../www')
 let SPOTIFY_CLIENT_SECRET, SPOTIFY_CLIENT_ID, SPOTIFY_USERNAME, PLAYLIST, GMAIL_USERNAME, GMAIL_PASSWORD, EMAIL_RECIPIENT, EMAIL_SUBJECT, GMAIL_ACCESS_TOKENl, GMAIL_REFRESH_TOKEN, GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_ACCESS_TOKEN, GENIUS_ACCESS_TOKEN
 fs.readFile(path.join(__dirname, '../client_info.json'), 'utf8', (err, data) => {
@@ -90,13 +102,16 @@ app.get('/callback', (req, res, next) => {
 
       const songs = body.items.map(element => element.track)
       if (process.env.NODE_ENV === 'production') {
+        console.log('prod schedule')
         nodeSchedule.scheduleJob('0 20 * * *', () => {
+          console.log('job start')
           findSong(songs, playedSongs)
-          count++
         })
       } else {
+        console.log('dev schedule')
         let count = 0
         nodeSchedule.scheduleJob('* * * * * *', () => {
+          console.log('job start')
           if (count < 5) {
             findSong(songs, playedSongs)
             count++
@@ -112,23 +127,23 @@ app.get('/callback', (req, res, next) => {
 function findSong (songs, playedSongs) {
   const song = songs[Math.floor(Math.random() * songs.length)]
   if (!playedSongs.includes(song.name) && !song.explicit) {
+    console.log('good song')
     getLyrics(song, (lyrics) => {
-      if (lyrics) {
-        fs.appendFile(path.join(__dirname, '../read_songs.txt'), song.name + '\n', (err) => {if (err) throw err})
-        playedSongs.push(song.name)
-        send(song, lyrics)
-      } else {
-        findSong(song, playedSongs)
-      }
+      console.log('lyrics found!')
+      fs.appendFile(path.join(__dirname, '../read_songs.txt'), song.name + '\n', (err) => {if (err) throw err})
+      playedSongs.push(song.name)
+      console.log('sending')
+      send(song, lyrics)
     })
   } else {
-    findSong(song, playedSongs)
+    console.log('bad song')
+    findSong(songs, playedSongs)
   }
 }
 
 function getLyrics (song, callback) {
   request.get({
-    url: `http://api.genius.com/search?` + querystring.stringify({q: song.name}),
+    url: `http://api.genius.com/search?` + querystring.stringify({q: song.name, per_page: 50}),
     headers: { 'Authorization': 'Bearer ' + GENIUS_ACCESS_TOKEN },
     json: true
   }, (err, res, body) => {
@@ -136,17 +151,30 @@ function getLyrics (song, callback) {
       console.log(err)
       return
     }
+    console.log('lyrics json received')
 
+    let found = false
     for (let hit of body.response.hits) {
+
       let artistName = hit.result.primary_artist.name
+      console.log(song.artists[0].name, artistName)
       if (song.artists[0].name.includes(artistName) || artistName.includes(song.artists[0].name)) {
+        found = true
+        console.log('lyrics song found')
         request.get({url: hit.result.url}, (err, res, body) => {
           if (err) return
+
+          console.log('lyrics page found')
 
           const $ = cheerio.load(body)
           callback($('.lyrics').text().trim())
         })
+        break
       }
+    }
+
+    if (!found) {
+      callback('[instrumental]')
     }
   })
 }
@@ -169,9 +197,9 @@ function send (song, lyrics) {
     to: EMAIL_RECIPIENT,
     subject: EMAIL_SUBJECT,
     text: `
-    Name:   ${song.name}
-    Song:   ${song.album.name}
-    Album:   ${song.artists[0].name}
+    Name:   ${song.artists[0].name}
+    Song:   ${song.name}
+    Album:   ${song.album.name}
     Lyrics:
 
     ${lyrics}
