@@ -32,10 +32,10 @@ fs.readFile(path.join(__dirname, '../client_info.json'), 'utf8', (err, data) => 
 let redirectUri
 if (process.env.NODE_ENV === 'production') {
   redirectUri = 'http://104.131.40.228:4000/callback'
-  console.log('running on http://104.131.40.228/')
+  console.log('running on http://104.131.40.228:4000')
 } else {
   redirectUri = 'http://0.0.0.0:4000/callback'
-  console.log('running on http://0.0.0.0:4000/')
+  console.log('running on http://0.0.0.0:4000')
 }
 
 let playedSongs
