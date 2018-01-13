@@ -7,20 +7,8 @@ import request from 'request'
 import nodemailer from 'nodemailer'
 import cheerio from 'cheerio'
 
-nodeSchedule.scheduleJob('0 20 * * *', () => {
-  console.log('day')
-})
-
-nodeSchedule.scheduleJob('0 * * * *', () => {
-  console.log('hour')
-})
-
-nodeSchedule.scheduleJob('* * * * *', () => {
-  console.log('minute')
-})
-
 const WWW = path.join(__dirname, '../www')
-let SPOTIFY_CLIENT_SECRET, SPOTIFY_CLIENT_ID, SPOTIFY_USERNAME, PLAYLIST, GMAIL_USERNAME, GMAIL_PASSWORD, EMAIL_RECIPIENT, EMAIL_SUBJECT, GMAIL_ACCESS_TOKENl, GMAIL_REFRESH_TOKEN, GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_ACCESS_TOKEN, GENIUS_ACCESS_TOKEN
+let SPOTIFY_CLIENT_SECRET, SPOTIFY_CLIENT_ID, SPOTIFY_USERNAME, PLAYLIST, GMAIL_USERNAME, EMAIL_RECIPIENT, EMAIL_SUBJECT, GMAIL_ACCESS_TOKEN, GMAIL_REFRESH_TOKEN, GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GENIUS_ACCESS_TOKEN
 fs.readFile(path.join(__dirname, '../client_info.json'), 'utf8', (err, data) => {
   if (err) throw err
   const results = JSON.parse(data)
@@ -44,8 +32,10 @@ fs.readFile(path.join(__dirname, '../client_info.json'), 'utf8', (err, data) => 
 let redirectUri
 if (process.env.NODE_ENV === 'production') {
   redirectUri = 'http://104.131.40.228:4000/callback'
+  console.log('running on http://104.131.40.228/')
 } else {
   redirectUri = 'http://0.0.0.0:4000/callback'
+  console.log('running on http://0.0.0.0:4000/')
 }
 
 let playedSongs
@@ -57,7 +47,7 @@ fs.readFile(path.join(__dirname, '../read_songs.txt'), 'utf8', (err, data) => {
 
 const app = express()
 app.set('views', WWW)
-const server = app.listen(4000, '0.0.0.0')
+app.listen(4000, '0.0.0.0')
 
 app.get('/', (req, res) => {
   let scope = 'playlist-read-private';
@@ -96,6 +86,7 @@ app.get('/callback', (req, res, next) => {
       headers: { 'Authorization': 'Bearer ' + accessToken },
       json: true
     }
+    console.log('Making request to spotify...')
 
     request.get(options, function(err, res, body) {
       if (err) throw err
@@ -103,20 +94,20 @@ app.get('/callback', (req, res, next) => {
       const songs = body.items.map(element => element.track)
       if (process.env.NODE_ENV === 'production') {
         console.log('prod schedule')
-        nodeSchedule.scheduleJob('0 20 * * *', () => {
+        if (!nodeSchedule.scheduleJob({ dayOfWeek: [0, 3, 5], hour: 20, minute: 0 }, () => {
           console.log('job start')
           findSong(songs, playedSongs)
-        })
+        })) throw new Error('Job creation failure')
       } else {
         console.log('dev schedule')
         let count = 0
-        nodeSchedule.scheduleJob('* * * * * *', () => {
+        if (!nodeSchedule.scheduleJob({ second: [0, 5, 10] }, () => {
           console.log('job start')
-          if (count < 5) {
+          if (count < 4) {
             findSong(songs, playedSongs)
             count++
           }
-        })
+        })) throw new Error('Job creation failure')
       }
     })
   })
@@ -213,6 +204,3 @@ function send (song, lyrics) {
     }
   })
 }
-
-
-console.log('RUNNING ON http://0.0.0.0:4000/')
